@@ -1,40 +1,43 @@
 /*
 
-  @file SimonSays_ATtiny13a.ino
+ @file SimonSays_ATtiny13a.ino
+ 
+ Memo:
+ Arduino IDE 1.0.6 + core13_022_arduino_1_6.zip
+ true is defined as 1.
+ false is defined as 0 (zero). 
+ 
+ Multiple switch connections using the analog inputs .  Pin ・・・PB2(A1)
+ 
+ VCC  ---+
+ R1 10K
+ A1   ---+--------+-----SW---+
+ |        R2  1.1k   |
+ +--------+-----SW---+
+ |        R3  2.4k   |
+ +--------+-----SW---+
+ |        R4  8.2k   |
+ +--------+-----SW---+
+ |
+ GND  -----------------------+
+ 
+ GREEN  LED                                             Pin ・・・PB3
+ BLUE   LED                                             Pin ・・・PB4
+ YELLOW LED                                             Pin ・・・PB1
+ RED    LED                                             Pin ・・・PB0
+ 
+ @brief Simon Says (ATtiny13a)
+ @author Kei Takagi
+ @date 2016.8.17
+ 
+ Copyright (c) 2016 Kei Takagi
+ Released under the MIT license
+ http://opensource.org/licenses/mit-license.php
+ 
+ */
 
-  Arduino IDE 1.0.6 + core13_022_arduino_1_6.zip
-
-  Multiple switch connections using the analog inputs .  Pin ・・・PB2(A1)
-
-  VCC  ---+
-          R1 10K
-  A1   ---+--------+-----SW---+
-          |        R2  1.1k   |
-          +--------+-----SW---+
-          |        R3  2.4k   |
-          +--------+-----SW---+
-          |        R4  8.2k   |
-          +--------+-----SW---+
-                              |
-  GND  -----------------------+
-
-  GREEN  LED                                             Pin ・・・PB3
-  BLUE   LED                                             Pin ・・・PB4
-  YELLOW LED                                             Pin ・・・PB1
-  RED    LED                                             Pin ・・・PB0
-
-  @brief Simon Says (ATtiny13a)
-  @author Kei Takagi
-  @date 2016.8.17
-
-  Copyright (c) 2016 Kei Takagi
-  Released under the MIT license
-  http://opensource.org/licenses/mit-license.php
-
-*/
-
-#define  STAGEMAX 16
-#define  WAIT   STAGEMAX * 3000
+#define  STAGEMAX 12
+#define  WAIT   STAGEMAX * 2000
 
 const byte pins[]  = {
   PB3, PB4, PB1, PB0
@@ -45,9 +48,11 @@ byte Step = 0;
 unsigned long t = 0;
 
 void setup() {
-  for (short i = 0; i < 4; i++)pinMode(pins[i], OUTPUT);
+  short i;
+  boolean flg=true;
+  for (i = 0; i < 4; i++)pinMode(pins[i], OUTPUT);
   while (true) {
-    LedAnime();
+    LedAnime(i++&0x0001);
     if ( analogRead(A1) < 1000 )break;
   };
   NextStage();
@@ -86,11 +91,9 @@ void loop() {
       }
       else {
         // fail
-        boolean flg = true;
         for (short i = 0; i < 8; i++) {
-          LED_ALL(flg);
+          LED_ALL(i & 0x0001);
           LED(Btn, 300);
-          flg = !flg;
         }
         t = 0;
       }
@@ -98,19 +101,13 @@ void loop() {
   }
 }
 
-void LedAnime()
+void LedAnime(boolean i)
 {
-  digitalWrite(pins[0], HIGH);
-  digitalWrite(pins[2], HIGH);
+  digitalWrite(pins[i], HIGH);
+  digitalWrite(pins[i + 2], HIGH);
   delay(150);
-  digitalWrite(pins[0], LOW);
-  digitalWrite(pins[2], LOW);
-
-  digitalWrite(pins[1], HIGH);
-  digitalWrite(pins[3], HIGH);
-  delay(200);
-  digitalWrite(pins[1], LOW);
-  digitalWrite(pins[3], LOW);
+  digitalWrite(pins[i], LOW);
+  digitalWrite(pins[i + 2], LOW);
 }
 
 void NextStage()
@@ -128,11 +125,14 @@ void NextStage()
   }
   else {
     //Winner
-    for (i = 0; i < 10; i++) {
-      LedAnime();
-      LED_ALL(i & 0x0001);
+    for (i = 0; i < 18; i++) {
+      LED_ALL(true);
+      delay(150);
+      LED_ALL(false);
+      LedAnime(i&0x0001);
     }
     ((void (*)())0x00)();// Softwear Reset
   }
 }
+
 
