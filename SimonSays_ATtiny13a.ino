@@ -1,11 +1,10 @@
 /*
-
- @file SimonSays_ATtiny13a.ino
+  @file SimonSays_ATtiny13a.ino
  
  Memo:
  Arduino IDE 1.0.6 + core13_022_arduino_1_6.zip
  true is defined as 1.
- false is defined as 0 (zero). 
+ false is defined as 0 (zero).
  
  Multiple switch connections using the analog inputs .  Pin ・・・PB2(A1)
  
@@ -48,17 +47,16 @@ byte Step = 0;
 unsigned long t = 0;
 
 void setup() {
-  short i;
-  boolean flg=true;
+  byte i;
   for (i = 0; i < 4; i++)pinMode(pins[i], OUTPUT);
   while (true) {
-    LedAnime(i++&0x0001);
+    LedAnime(i++ % 2);
     if ( analogRead(A1) < 1000 )break;
   };
   NextStage();
 }
 
-void LED(short i, int wait) {
+void LED(byte i, int wait) {
   digitalWrite(pins[i], HIGH);
   delay(wait);
   digitalWrite(pins[i], LOW);
@@ -66,11 +64,11 @@ void LED(short i, int wait) {
 }
 
 void LED_ALL(boolean flg) {
-  for (short i = 0; i < 4; i++)digitalWrite(pins[i], flg);
+  for (byte i = 0; i < 4; i++)digitalWrite(pins[i], flg);
 }
 
 void loop() {
-  short Btn = 9;
+  byte Btn = 9;
   if ( millis()  > t ) {
     delay(1000);
     ((void (*)())0x00)();// fail:Softwear Reset
@@ -91,8 +89,8 @@ void loop() {
       }
       else {
         // fail
-        for (short i = 0; i < 8; i++) {
-          LED_ALL(i & 0x0001);
+        for (byte i = 0; i < 8; i++) {
+          LED_ALL(i % 2);
           LED(Btn, 300);
         }
         t = 0;
@@ -101,7 +99,7 @@ void loop() {
   }
 }
 
-void LedAnime(boolean i)
+void LedAnime(byte i)
 {
   digitalWrite(pins[i], HIGH);
   digitalWrite(pins[i + 2], HIGH);
@@ -112,13 +110,13 @@ void LedAnime(boolean i)
 
 void NextStage()
 {
-  short i;
+  byte i;
   Step = 0;
   if (Stage < STAGEMAX)
   {
     //Next Stage
     t = millis() + WAIT;
-    StageBuf[Stage] = t % 4;
+    StageBuf[Stage] = (t / 13 + Stage) % 4;
     Stage++;
     delay(500);
     for (i = 0; i < Stage; i++)LED(StageBuf[i], 500);
@@ -129,7 +127,7 @@ void NextStage()
       LED_ALL(true);
       delay(150);
       LED_ALL(false);
-      LedAnime(i&0x0001);
+      LedAnime(i % 2);
     }
     ((void (*)())0x00)();// Softwear Reset
   }
